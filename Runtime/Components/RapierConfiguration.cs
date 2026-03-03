@@ -57,7 +57,7 @@ namespace RapierPhysics
                 new UIntPtr((uint)NumSolverIterations),
                 new UIntPtr((uint)NumInternalPgsIterations),
                 new UIntPtr((uint)NumAdditionalFrictionIterations),
-                new UIntPtr((uint)NumInternalStabilizationIterations),
+                //new UIntPtr((uint)NumInternalStabilizationIterations),
                 new UIntPtr((uint)MaxCcdSubsteps),
                 ContactDampingRatio,
                 JointDampingRatio,

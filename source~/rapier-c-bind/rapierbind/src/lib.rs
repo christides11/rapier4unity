@@ -4,7 +4,6 @@ use crate::handles::{
     SerializableColliderHandle, SerializableRigidBodyHandle, SerializableRigidBodyType,
 };
 use handles::SerializableImpulseJointHandle;
-use rapier3d::crossbeam;
 use rapier3d::na::{Isometry, Quaternion, UnitQuaternion, Vector2, Vector3, Vector4};
 use rapier3d::prelude::*;
 use std::mem;
@@ -630,7 +629,6 @@ pub extern "C" fn set_integration_parameters(
     // Solver parameters
     solver_iterations: usize,
     solver_pgs_iterations: usize,
-    solver_additional_friction_iterations: usize,
     solver_stabilization_iterations: usize,
     ccd_substeps: usize,
     // Damping parameters
@@ -645,16 +643,12 @@ pub extern "C" fn set_integration_parameters(
     // Length unit
     length_unit: f32,
 ) {
-    use std::num::NonZeroUsize;
-
     let psd = get_mutable_physics_solver();
     psd.integration_parameters.dt = dt;
     psd.integration_parameters.min_ccd_dt = dt / 100.0;
-    psd.integration_parameters.num_solver_iterations =
-        NonZeroUsize::new(solver_iterations as usize).unwrap_or(NonZeroUsize::new(4).unwrap());
+    psd.integration_parameters.num_solver_iterations = solver_iterations;
     psd.integration_parameters.num_internal_pgs_iterations = solver_pgs_iterations;
-    psd.integration_parameters
-        .num_additional_friction_iterations = solver_additional_friction_iterations;
+    //psd.integration_parameters.friction_model = ;
     psd.integration_parameters
         .num_internal_stabilization_iterations = solver_stabilization_iterations;
     psd.integration_parameters.max_ccd_substeps = ccd_substeps;
@@ -791,8 +785,8 @@ struct SerializableCollisionEvent {
 
 impl PhysicsSolverData<'_> {
     fn solve(&mut self) -> Vec<SerializableCollisionEvent> {
-        let (collision_send, collision_recv) = crossbeam::channel::unbounded();
-        let (contact_force_send, _contact_force_recv) = crossbeam::channel::unbounded();
+        let (collision_send, collision_recv) = std::sync::mpsc::channel();
+        let (contact_force_send, _contact_force_recv) = std::sync::mpsc::channel();
         let event_handler = ChannelEventCollector::new(collision_send, contact_force_send);
 
         self.physics_pipeline.step(
