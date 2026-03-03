@@ -1,15 +1,6 @@
-using System;
-using System.Collections.Generic;
-using Packages.rapier4unity.Runtime;
 using RapierPhysics;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Assertions;
-using UnityEngine.Events;
 using UnityEngine.LowLevel;
-using Object = UnityEngine.Object;
 
 namespace Packages.rapier4unity.Runtime
 {
