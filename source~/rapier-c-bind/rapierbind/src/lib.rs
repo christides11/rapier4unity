@@ -692,13 +692,10 @@ extern "C" fn cast_ray(
 ) -> bool {
     let psd = get_mutable_physics_solver();
     let ray = Ray::new(point![from_x, from_y, from_z], vector![dir_x, dir_y, dir_z]);
-    if let Some((handle, intersection)) = psd.query_pipeline.cast_ray_and_get_normal(
-        &psd.rigid_body_set,
-        &psd.collider_set,
+    if let Some((handle, intersection)) = psd.broad_phase.as_query_pipeline(psd.narrow_phase.query_dispatcher(), &psd.rigid_body_set, &psd.collider_set, QueryFilter::default()).cast_ray_and_get_normal(
         &ray,
         4.0,
-        true,
-        QueryFilter::default(),
+        true
     ) {
         let point = ray.point_at(intersection.time_of_impact);
         let normal = intersection.normal;
@@ -754,7 +751,6 @@ pub struct PhysicsSolverData<'a> {
     pub impulse_joint_set: ImpulseJointSet,
     pub multibody_joint_set: MultibodyJointSet,
     pub ccd_solver: CCDSolver,
-    pub query_pipeline: QueryPipeline,
     pub physics_hooks: &'a dyn PhysicsHooks,
     pub event_handler: &'a dyn EventHandler,
 
@@ -777,10 +773,8 @@ impl Default for PhysicsSolverData<'_> {
             impulse_joint_set: ImpulseJointSet::new(),
             multibody_joint_set: MultibodyJointSet::new(),
             ccd_solver: CCDSolver::new(),
-            query_pipeline: QueryPipeline::new(),
             physics_hooks: &(),
             event_handler: &(),
-
             rigid_body_set: RigidBodySet::new(),
             collider_set: ColliderSet::new(),
         }
@@ -812,7 +806,6 @@ impl PhysicsSolverData<'_> {
             &mut self.impulse_joint_set,
             &mut self.multibody_joint_set,
             &mut self.ccd_solver,
-            Some(&mut self.query_pipeline),
             &(),
             &event_handler,
         );
