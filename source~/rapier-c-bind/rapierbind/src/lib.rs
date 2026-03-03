@@ -38,6 +38,11 @@ extern "C" fn hello_world() {
     log::info!("Hello, cake!");
 }
 
+#[unsafe(no_mangle)]
+extern "C" fn version() {
+    log::info!("Rapier Version {}", rapier3d::VERSION);
+}
+
 // teardown
 #[unsafe(no_mangle)]
 extern "C" fn teardown() {

@@ -32,6 +32,7 @@ internal static unsafe class RapierBindings
 #if UNITY_EDITOR && !DISABLE_DYNAMIC_RAPIER_LOAD
 	public static void Init(FunctionsToCallFromRust* funcs) => ((delegate* unmanaged[Cdecl]<FunctionsToCallFromRust*, void>) data.Data.init)(funcs);
 	public static void HelloWorld() => ((delegate* unmanaged[Cdecl]<void>) data.Data.helloWorld)();
+	public static void Version() => ((delegate* unmanaged[Cdecl]<void>) data.Data.version)();
 	public static void Teardown() => ((delegate* unmanaged[Cdecl]<void>) data.Data.teardown)();
 	public static RawArray<CollisionEvent>* Solve() => ((delegate* unmanaged[Cdecl]<RawArray<CollisionEvent>*>) data.Data.solve)();
 	public static void FreeCollisionEvents(RawArray<CollisionEvent>* ptr) => ((delegate* unmanaged[Cdecl]<RawArray<CollisionEvent>*, void>) data.Data.freeCollisionEvents)(ptr);
@@ -67,6 +68,8 @@ internal static unsafe class RapierBindings
 	public static extern unsafe void Init(FunctionsToCallFromRust* funcs);
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="hello_world")]
 	public static extern unsafe void HelloWorld();
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="version")]
+	public static extern unsafe void Version();
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="teardown")]
 	public static extern unsafe void Teardown();
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="solve")]
@@ -151,6 +154,7 @@ internal static unsafe class RapierBindings
             // Load function pointers
             init = NativeLoader.GetFunction(loaded_lib, "init");
 			helloWorld = NativeLoader.GetFunction(loaded_lib, "hello_world");
+			version = NativeLoader.GetFunction(loaded_lib, "version");
 			teardown = NativeLoader.GetFunction(loaded_lib, "teardown");
 			solve = NativeLoader.GetFunction(loaded_lib, "solve");
 			freeCollisionEvents = NativeLoader.GetFunction(loaded_lib, "free_collision_events");
@@ -186,6 +190,7 @@ internal static unsafe class RapierBindings
         // Raw function pointers
         public IntPtr init;
 		public IntPtr helloWorld;
+		public IntPtr version;
 		public IntPtr teardown;
 		public IntPtr solve;
 		public IntPtr freeCollisionEvents;

@@ -51,6 +51,7 @@ namespace RapierPhysics
 
         public void Awake()
         {
+            RapierBindings.Version();
             RapierBindings.SetIntegrationParameters(
                 1.0f / PhysicsTicksPerSecond,
                 new UIntPtr((uint)NumSolverIterations),
