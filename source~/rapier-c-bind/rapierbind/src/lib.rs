@@ -4,7 +4,7 @@ use crate::handles::{
     SerializableColliderHandle, SerializableRigidBodyHandle, SerializableRigidBodyType,
 };
 use handles::SerializableImpulseJointHandle;
-use rapier3d::na::{Isometry, Quaternion, UnitQuaternion, Vector2, Vector3, Vector4};
+use rapier3d::na::{Quaternion, UnitQuaternion, Vector2, Vector3, Vector4};
 use rapier3d::prelude::*;
 use std::mem;
 use unitybridge::{AssignUnityLogger, IUnityLog};
@@ -89,7 +89,7 @@ extern "C" fn free_collision_events(ptr: *mut RawArray<SerializableCollisionEven
 
 #[unsafe(no_mangle)]
 extern "C" fn set_gravity(x: f32, y: f32, z: f32) {
-    get_mutable_physics_solver().gravity = vector![x, y, z];
+    get_mutable_physics_solver().gravity = Vector::new(x, y, z);
 }
 
 #[unsafe(no_mangle)]
@@ -169,11 +169,11 @@ extern "C" fn add_mesh_collider(
     // Convert flat arrays to points
     let mut vertices = Vec::with_capacity(vertices_count);
     for i in 0..vertices_count {
-        vertices.push(point![
+        vertices.push(Vector::new(
             vertices_flat[i * 3],
             vertices_flat[i * 3 + 1],
             vertices_flat[i * 3 + 2]
-        ]);
+        ));
     }
 
     // Convert flat indices to triangle indices
@@ -217,11 +217,11 @@ extern "C" fn add_convex_mesh_collider(
     // Convert flat arrays to points
     let mut points = Vec::with_capacity(vertices_count);
     for i in 0..vertices_count {
-        points.push(point![
+        points.push(Vector::new(
             vertices_flat[i * 3],
             vertices_flat[i * 3 + 1],
             vertices_flat[i * 3 + 2]
-        ]);
+        ));
     }
 
     // Build the convex hull collider
@@ -263,12 +263,12 @@ extern "C" fn add_rigid_body(
     let axis = unit_quat.axis().unwrap_or(Vector3::z_axis());
 
     // Create the AngVector (axis-angle representation)
-    let ang_vector = axis.into_inner() * angle;
+    let ang_vector = axis.into_inner();
 
     // Build with the AngVector
     let rigid_body = RigidBodyBuilder::new(rb_type.into())
-        .translation(vector![position_x, position_y, position_z])
-        .rotation(ang_vector)
+        .translation(Vector::new(position_x, position_y, position_z))
+        .rotation(AngVector::new(ang_vector.x * angle, ang_vector.y * angle, ang_vector.z * angle))
         .build();
 
     let rb_handle = psd.rigid_body_set.insert(rigid_body);
@@ -336,16 +336,15 @@ extern "C" fn add_fixed_joint(
     self_collision: bool,
 ) -> SerializableImpulseJointHandle {
     let psd = get_mutable_physics_solver();
-    let point1: Point<Real> = point![local_frame1_x, local_frame1_y, local_frame1_z];
-    let point2: Point<Real> = point![local_frame2_x, local_frame2_y, local_frame2_z];
+    let point1: Vector = Vector::new(local_frame1_x, local_frame1_y, local_frame1_z);
+    let point2: Vector = Vector::new(local_frame2_x, local_frame2_y, local_frame2_z);
     let anchor_rb = psd.rigid_body_set.get(rb1_handle.into()).unwrap();
     let mover_rb = psd.rigid_body_set.get(rb2_handle.into()).unwrap();
     // Construct the local_frame for the first body
     let local_frame1 =
-        Isometry::from_parts(Translation::from(point1), anchor_rb.position().rotation);
+        Pose::from_parts(point1, anchor_rb.position().rotation);
     // Construct the local_frame for the second body
-    let local_frame2 =
-        Isometry::from_parts(Translation::from(point2), mover_rb.position().rotation);
+    let local_frame2 = Pose::from_parts(point2, mover_rb.position().rotation);
     let joint = FixedJointBuilder::new()
         .local_frame1(local_frame1)
         .local_frame2(local_frame2)
@@ -369,16 +368,16 @@ extern "C" fn add_spherical_joint(
     self_collision: bool,
 ) -> SerializableImpulseJointHandle {
     let psd = get_mutable_physics_solver();
-    let point1: Point<Real> = point![local_frame1_x, local_frame1_y, local_frame1_z];
-    let point2: Point<Real> = point![local_frame2_x, local_frame2_y, local_frame2_z];
+    let point1: Vector = Vector::new(local_frame1_x, local_frame1_y, local_frame1_z);
+    let point2: Vector = Vector::new(local_frame2_x, local_frame2_y, local_frame2_z);
     let anchor_rb = psd.rigid_body_set.get(rb1_handle.into()).unwrap();
     let mover_rb = psd.rigid_body_set.get(rb2_handle.into()).unwrap();
     // Construct the local_frame for the first body
     let local_frame1 =
-        Isometry::from_parts(Translation::from(point1), anchor_rb.position().rotation);
+        Pose::from_parts(point1, anchor_rb.position().rotation);
     // Construct the local_frame for the second body
     let local_frame2 =
-        Isometry::from_parts(Translation::from(point2), mover_rb.position().rotation);
+        Pose::from_parts(point2, mover_rb.position().rotation);
     let joint = SphericalJointBuilder::new()
         // .local_anchor1(point1)
         // .local_anchor2(point2)
@@ -407,9 +406,9 @@ extern "C" fn add_revolute_joint(
     self_collision: bool,
 ) -> SerializableImpulseJointHandle {
     let psd = get_mutable_physics_solver();
-    let point1: Point<Real> = point![local_frame1_x, local_frame1_y, local_frame1_z];
-    let point2: Point<Real> = point![local_frame2_x, local_frame2_y, local_frame2_z];
-    let axis: UnitVector<Real> = UnitVector::new_normalize(vector![axis_x, axis_y, axis_z]);
+    let point1: Vector = Vector::new(local_frame1_x, local_frame1_y, local_frame1_z);
+    let point2: Vector = Vector::new(local_frame2_x, local_frame2_y, local_frame2_z);
+    let axis: Vector = Vector::new(axis_x, axis_y, axis_z).normalize();
     let joint = RevoluteJointBuilder::new(axis)
         .local_anchor1(point1)
         .local_anchor2(point2)
@@ -438,9 +437,9 @@ extern "C" fn add_prismatic_joint(
     self_collision: bool,
 ) -> SerializableImpulseJointHandle {
     let psd = get_mutable_physics_solver();
-    let point1: Point<Real> = point![local_frame1_x, local_frame1_y, local_frame1_z];
-    let point2: Point<Real> = point![local_frame2_x, local_frame2_y, local_frame2_z];
-    let axis: UnitVector<Real> = UnitVector::new_normalize(vector![axis_x, axis_y, axis_z]);
+    let point1: Vector = Vector::new(local_frame1_x, local_frame1_y, local_frame1_z);
+    let point2: Vector = Vector::new(local_frame2_x, local_frame2_y, local_frame2_z);
+    let axis: Vector = Vector::new(axis_x, axis_y, axis_z).normalize();
     let joint = PrismaticJointBuilder::new(axis)
         .local_anchor1(point1)
         .local_anchor2(point2)
@@ -465,8 +464,8 @@ extern "C" fn get_transform(rb_handle: SerializableRigidBodyHandle) -> RapierTra
     let rb = psd.rigid_body_set.get(rb_handle.into()).unwrap();
     let pos = rb.position();
     RapierTransform {
-        rotation: pos.rotation.coords,
-        position: pos.translation.vector,
+        rotation: Vector4::new(pos.rotation.x, pos.rotation.y, pos.rotation.z, pos.rotation.w),
+        position: pos.translation,
     }
 }
 
@@ -479,8 +478,8 @@ extern "C" fn set_transform_position(
 ) {
     let psd = get_mutable_physics_solver();
     let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
-    let iso = Isometry::from_parts(
-        Translation::from(vector![position_x, position_y, position_z]),
+    let iso = Pose::from_parts(
+        Vector::new(position_x, position_y, position_z),
         // This is a trick to make sure the order of the position versus rotation will work in either order
         rb.next_position().rotation,
     );
@@ -497,9 +496,7 @@ extern "C" fn set_transform_rotation(
 ) {
     let psd = get_mutable_physics_solver();
     let rb: &mut RigidBody = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
-    rb.set_next_kinematic_rotation(UnitQuaternion::new_normalize(Quaternion::new(
-        rotation_w, rotation_x, rotation_y, rotation_z,
-    )));
+    rb.set_next_kinematic_rotation(Rotation::from_vec4(Vec4::new(rotation_w, rotation_x, rotation_y, rotation_z)).normalize());
 }
 
 #[unsafe(no_mangle)]
@@ -515,12 +512,7 @@ extern "C" fn set_transform(
 ) {
     let psd = get_mutable_physics_solver();
     let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
-    let iso = Isometry::from_parts(
-        Translation::from(vector![position_x, position_y, position_z]),
-        UnitQuaternion::new_normalize(Quaternion::new(
-            rotation_w, rotation_x, rotation_y, rotation_z,
-        )),
-    );
+    let iso = Pose::from_parts(Vector::new(position_x, position_y, position_z), Rot3::from_vec4(Vec4::new(rotation_w, rotation_x, rotation_y, rotation_z)).normalize());
     rb.set_next_kinematic_position(iso);
 }
 
@@ -533,7 +525,7 @@ extern "C" fn set_linear_velocity(
 ) {
     let psd = get_mutable_physics_solver();
     let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
-    rb.set_linvel(vector![velocity_x, velocity_y, velocity_z], true);
+    rb.set_linvel(Vector::new(velocity_x, velocity_y, velocity_z), true);
 }
 
 #[unsafe(no_mangle)]
@@ -545,18 +537,18 @@ extern "C" fn set_angular_velocity(
 ) {
     let psd = get_mutable_physics_solver();
     let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
-    rb.set_angvel(vector![velocity_x, velocity_y, velocity_z], true);
+    rb.set_angvel(Vector::new(velocity_x, velocity_y, velocity_z), true);
 }
 
 #[unsafe(no_mangle)]
-extern "C" fn get_linear_velocity(rb_handle: SerializableRigidBodyHandle) -> Vector3<f32> {
+extern "C" fn get_linear_velocity(rb_handle: SerializableRigidBodyHandle) -> Vector {
     let psd = get_mutable_physics_solver();
     let rb = psd.rigid_body_set.get(rb_handle.into()).unwrap();
     rb.linvel().clone()
 }
 
 #[unsafe(no_mangle)]
-extern "C" fn get_angular_velocity(rb_handle: SerializableRigidBodyHandle) -> Vector3<f32> {
+extern "C" fn get_angular_velocity(rb_handle: SerializableRigidBodyHandle) -> Vector {
     let psd = get_mutable_physics_solver();
     let rb = psd.rigid_body_set.get(rb_handle.into()).unwrap();
     rb.angvel().clone()
@@ -577,16 +569,16 @@ extern "C" fn add_force(
     match mode {
         ForceMode::Force => {
             linvel +=
-                vector![force_x, force_y, force_z] * psd.integration_parameters.dt / rb.mass();
+                Vector::new(force_x, force_y, force_z) * psd.integration_parameters.dt / rb.mass();
         }
         ForceMode::Impulse => {
-            linvel += vector![force_x, force_y, force_z] / rb.mass();
+            linvel += Vector::new(force_x, force_y, force_z) / rb.mass();
         }
         ForceMode::VelocityChange => {
-            linvel += vector![force_x, force_y, force_z];
+            linvel += Vector::new(force_x, force_y, force_z);
         }
         ForceMode::Acceleration => {
-            linvel += vector![force_x, force_y, force_z] * psd.integration_parameters.dt;
+            linvel += Vector::new(force_x, force_y, force_z) * psd.integration_parameters.dt;
         }
     }
     // log::info!("linvel: {:?}, mode: {:?}", linvel, mode);
@@ -607,16 +599,16 @@ extern "C" fn add_torque(
     match mode {
         ForceMode::Force => {
             angvel +=
-                vector![torque_x, torque_y, torque_z] * psd.integration_parameters.dt / rb.mass();
+                Vector::new(torque_x, torque_y, torque_z) * psd.integration_parameters.dt / rb.mass();
         }
         ForceMode::Impulse => {
-            angvel += vector![torque_x, torque_y, torque_z] / rb.mass();
+            angvel += Vector::new(torque_x, torque_y, torque_z) / rb.mass();
         }
         ForceMode::VelocityChange => {
-            angvel += vector![torque_x, torque_y, torque_z];
+            angvel += Vector::new(torque_x, torque_y, torque_z);
         }
         ForceMode::Acceleration => {
-            angvel += vector![torque_x, torque_y, torque_z] * psd.integration_parameters.dt;
+            angvel += Vector::new(torque_x, torque_y, torque_z) * psd.integration_parameters.dt;
         }
     }
     rb.set_angvel(angvel, true);
@@ -633,10 +625,8 @@ pub extern "C" fn set_integration_parameters(
     ccd_substeps: usize,
     // Damping parameters
     contact_damping_ratio: f32,
-    joint_damping_ratio: f32,
     // Frequency parameters
     contact_frequency: f32,
-    joint_frequency: f32,
     // Prediction parameters
     prediction_distance: f32,
     max_corrective_velocity: f32,
@@ -652,10 +642,7 @@ pub extern "C" fn set_integration_parameters(
     psd.integration_parameters
         .num_internal_stabilization_iterations = solver_stabilization_iterations;
     psd.integration_parameters.max_ccd_substeps = ccd_substeps;
-    psd.integration_parameters.contact_damping_ratio = contact_damping_ratio;
-    psd.integration_parameters.joint_damping_ratio = joint_damping_ratio;
-    psd.integration_parameters.contact_natural_frequency = contact_frequency;
-    psd.integration_parameters.joint_natural_frequency = joint_frequency;
+    psd.integration_parameters.contact_softness = SpringCoefficients::new(contact_frequency, contact_damping_ratio);
     psd.integration_parameters.normalized_prediction_distance = prediction_distance;
     psd.integration_parameters
         .normalized_max_corrective_velocity = max_corrective_velocity;
@@ -666,8 +653,8 @@ pub extern "C" fn set_integration_parameters(
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 struct RaycastHit {
-    m_point: Vector3<f32>,
-    m_normal: Vector3<f32>,
+    m_point: Vector,
+    m_normal: Vector,
     m_face_id: u32,
     m_distance: f32,
     m_uv: Vector2<f32>,
@@ -685,7 +672,7 @@ extern "C" fn cast_ray(
     out_hit: *mut RaycastHit,
 ) -> bool {
     let psd = get_mutable_physics_solver();
-    let ray = Ray::new(point![from_x, from_y, from_z], vector![dir_x, dir_y, dir_z]);
+    let ray = Ray::new(Vector::new(from_x, from_y, from_z), Vector::new(dir_x, dir_y, dir_z));
     if let Some((handle, intersection)) = psd.broad_phase.as_query_pipeline(psd.narrow_phase.query_dispatcher(), &psd.rigid_body_set, &psd.collider_set, QueryFilter::default()).cast_ray_and_get_normal(
         &ray,
         4.0,
@@ -702,7 +689,7 @@ extern "C" fn cast_ray(
         let distance = intersection.time_of_impact;
         let uv = vector![0.0, 0.0];
         let hit = RaycastHit {
-            m_point: point.coords,
+            m_point: point,
             m_normal: normal,
             m_face_id: face_id,
             m_distance: distance,
@@ -731,12 +718,12 @@ pub enum ForceMode {
 #[derive(Debug, Clone, Copy)]
 struct RapierTransform {
     rotation: Vector4<f32>,
-    position: Vector<f32>,
+    position: Vector,
 }
 
 // PhysicsSolverData is a struct that holds all the data needed to solve physics.
 pub struct PhysicsSolverData<'a> {
-    pub gravity: Vector<f32>,
+    pub gravity: Vector,
     pub integration_parameters: IntegrationParameters,
     pub physics_pipeline: PhysicsPipeline,
     pub island_manager: IslandManager,
@@ -758,7 +745,7 @@ impl Default for PhysicsSolverData<'_> {
         integration_parameters.dt = 1.0 / 50.0;
         integration_parameters.min_ccd_dt = 1.0 / 50.0 / 100.0;
         PhysicsSolverData {
-            gravity: vector![0.0, -9.81, 0.0],
+            gravity: Vector::new(0.0, -9.81, 0.0),
             integration_parameters,
             physics_pipeline: PhysicsPipeline::new(),
             island_manager: IslandManager::new(),
@@ -790,7 +777,7 @@ impl PhysicsSolverData<'_> {
         let event_handler = ChannelEventCollector::new(collision_send, contact_force_send);
 
         self.physics_pipeline.step(
-            &self.gravity,
+            self.gravity,
             &self.integration_parameters,
             &mut self.island_manager,
             &mut self.broad_phase,

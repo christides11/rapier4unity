@@ -32,7 +32,7 @@ pub fn locked_axes_to_unity_constraints(locked_axes: LockedAxes) -> u32 {
 
 pub fn cancel_axis_velocity(current_locks: LockedAxes, rigidbody: &mut RigidBody) {
     // Cancel the velocity for locked translation axes
-    let mut linvel = *rigidbody.linvel();
+    let mut linvel = rigidbody.linvel();
 
     if current_locks.contains(LockedAxes::TRANSLATION_LOCKED_X) {
         linvel[0] = 0.0;
@@ -46,7 +46,7 @@ pub fn cancel_axis_velocity(current_locks: LockedAxes, rigidbody: &mut RigidBody
     rigidbody.set_linvel(linvel, false);
 
     // Cancel the velocity for locked rotation axes
-    let mut angvel = *rigidbody.angvel();
+    let mut angvel = rigidbody.angvel();
     if current_locks.contains(LockedAxes::ROTATION_LOCKED_X) {
         angvel[0] = 0.0;
     }

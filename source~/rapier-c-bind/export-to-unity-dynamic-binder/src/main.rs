@@ -16,6 +16,7 @@ static RUST_TYPE_TO_CSHARP: Map<&'static str, &'static str> = phf_map! {
     "SerializableCollisionEvent" => "CollisionEvent",
     "RaycastHit" => "RapierRaycastHit",
     "Vector3<float>" => "float3",
+    "Vector" => "float3",
     "Vector2<float>" => "float2",
     "u32" => "uint",
     "f32" => "float",
