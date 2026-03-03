@@ -44,6 +44,9 @@ namespace Packages.rapier4unity.Runtime
 		static void SetupPlayerLoop()
 		{
 			RapierBindings.LoadCalls();
+			RapierBindings.Version();
+			var rapierSettings = RapierSettings.GetOrCreateSettings();
+			rapierSettings.ApplySettings();
 
 			// Get the current player loop
 			PlayerLoopSystem loop = PlayerLoop.GetCurrentPlayerLoop();

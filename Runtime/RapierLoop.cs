@@ -519,6 +519,11 @@ public class RapierLoop
 		
 		if (Physics.simulationMode != SimulationMode.FixedUpdate) return;
 		
+		Tick();
+	}
+
+	public static void Tick()
+	{
 		unsafe
 		{
 			// Solve physics and get collision events

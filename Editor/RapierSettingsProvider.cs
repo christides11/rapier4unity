@@ -21,7 +21,19 @@ namespace RapierPhysics
 
         public override void OnGUI(string searchContext)
         {
-            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty("simulationMode"));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.PhysicsTicksPerSecond)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.NumSolverIterations)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.NumInternalPgsIterations)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.NumAdditionalFrictionIterations)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.NumInternalStabilizationIterations)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.MaxCcdSubsteps)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.ContactDampingRatio)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.ContactNaturalFrequency)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.JointNaturalFrequency)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.JointDampingRatio)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.LengthUnit)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.NormalizedPredictionDistance)));
+            EditorGUILayout.PropertyField(m_CustomSettings.FindProperty(nameof(RapierSettings.NormalizedMaxCorrectiveVelocity)));
             m_CustomSettings.ApplyModifiedPropertiesWithoutUndo();
         }
 
