@@ -8,7 +8,6 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Events;
-using Object = UnityEngine.Object;
 
 public class RapierLoop
 {
@@ -48,6 +47,8 @@ public class RapierLoop
 		}
 	}
 
+	static List<Collider> collidersToRegister = new List<Collider>();
+	static List<Rigidbody> rigidbodiesToRegister = new List<Rigidbody>();
 	static Dictionary<Rigidbody, RigidBodyHandle> rigidbodyToHandle = new();
 	static Dictionary<Collider, ColliderHandle> colliderToHandle = new();
 	static Dictionary<ColliderHandle, Collider> handleToCollider = new();
@@ -285,7 +286,16 @@ public class RapierLoop
 		hit = UnsafeUtility.As<LocalRaycastHit, RaycastHit>(ref localHit);
 		return true;
 	}
+	
+	public static void EnqueueCollider(Collider collider)
+	{
+		collidersToRegister.Add(collider);
+	}
 
+	public static void EnqueueRigidbody(Rigidbody rigidbody)
+	{
+		rigidbodiesToRegister.Add(rigidbody);
+	}
 
 	// Called in the beginning of every frame, this ensures that all colliders and rigidbodies are initialized
 	public static unsafe void Initialization()
@@ -293,17 +303,17 @@ public class RapierLoop
 		if (!Application.isPlaying || !RapierBindings.IsAvailable)
 			return;
 
-		// Find and add all colliders
-		foreach (Collider collider in Object.FindObjectsByType<Collider>(FindObjectsSortMode.None))
-		{
+		foreach(Collider collider in collidersToRegister)
 			AddCollider(collider);
+
+		foreach (Rigidbody rigidbody in rigidbodiesToRegister)
+		{
+			TryCreateRigidBodyHandle(rigidbody);
 		}
 
-		// Find and add all rigidbodies
-		foreach (Rigidbody rigidbody in Object.FindObjectsByType<Rigidbody>(FindObjectsSortMode.None))
+		foreach (var rth in rigidbodyToHandle)
 		{
-			RigidBodyHandle handle = CreateOrGetRigidBodyHandle(rigidbody);
-			UpdateRigidBody(rigidbody, handle);
+			UpdateRigidBody(rth.Key, rth.Value);
 		}
 	}
 
@@ -496,6 +506,33 @@ public class RapierLoop
 		rigidbodyToHandle[rigidbody] = rigidBodyHandle;
 		return rigidBodyHandle;
 	}
+	
+	private static void TryCreateRigidBodyHandle(Rigidbody rigidbody, RigidBodyType type = RigidBodyType.Dynamic)
+	{
+		// Try to get the handle from the dictionary first
+		if (rigidbodyToHandle.ContainsKey(rigidbody)) return;
+		
+		// Handle doesn't exist, create a new one
+		Collider[] colliders = rigidbody.GetComponents<Collider>();
+		Assert.AreEqual(colliders.Length, 1, "Rigidbody must have exactly one collider for the moment");
+
+		// Try to add a collider in case we don't have one yet
+		AddCollider(colliders[0]);
+		ColliderHandle colliderHandle = colliderToHandle[colliders[0]];
+		Transform trs = rigidbody.transform;
+		RigidBodyHandle rigidBodyHandle = RapierBindings.AddRigidBody(
+			colliderHandle,
+			type,
+			trs.position.x,
+			trs.position.y,
+			trs.position.z,
+			trs.rotation.x,
+			trs.rotation.y,
+			trs.rotation.z,
+			trs.rotation.w);
+
+		rigidbodyToHandle[rigidbody] = rigidBodyHandle;
+	}
 
 	private static void UpdateRigidBody(Rigidbody rigidbody, RigidBodyHandle handle)
 	{
@@ -582,11 +619,11 @@ public class RapierLoop
 		}
 
 		// Update GameObject positions of GameObjects with RigidBody component
-		foreach (Rigidbody rigidbody in Object.FindObjectsByType<Rigidbody>(FindObjectsSortMode.None))
+		foreach (var rigidbodyAndHandle in rigidbodyToHandle)
 		{
-			RigidBodyHandle handle = rigidbodyToHandle[rigidbody];
+			RigidBodyHandle handle = rigidbodyToHandle[rigidbodyAndHandle.Key];
 			RapierTransform position = RapierBindings.GetTransform(handle);
-			rigidbody.transform.SetPositionAndRotation(position.position, position.rotation);
+			rigidbodyAndHandle.Key.transform.SetPositionAndRotation(position.position, position.rotation);
 		}
 
 		// Update fixed rigidbodies
