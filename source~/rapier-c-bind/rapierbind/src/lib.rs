@@ -1,6 +1,7 @@
 mod handles;
 mod utils;
 mod world_state;
+mod rapier_math;
 
 use crate::handles::{
     SerializableColliderHandle, SerializableRigidBodyHandle, SerializableRigidBodyType,

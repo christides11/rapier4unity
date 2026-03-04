@@ -18,9 +18,15 @@ static RUST_TYPE_TO_CSHARP: Map<&'static str, &'static str> = phf_map! {
     "Vector3<float>" => "float3",
     "Vector" => "float3",
     "Vector2<float>" => "float2",
+    "u8" => "byte",
+    "i8" => "sbyte",
+    "u16" => "ushort",
+    "i16" => "short",
     "u32" => "uint",
-    "f32" => "float",
     "i32" => "int",
+    "u64" => "ulong",
+    "f32" => "float",
+    "f64" => "double",
     "usize" => "UIntPtr",
     // Add more entries
 };
@@ -30,7 +36,7 @@ fn main() -> Result<()> {
     let folder = args().nth(1).expect("Please provide an input folder.");
     let files = get_rust_files(&folder)?;
 
-    let path = std::path::Path::new("../../Runtime/RapierBinds.cs");
+    let path = std::path::Path::new("../../Runtime/RapierBindings/RapierBinds.cs");
 
     // Delete and recreate the file
     if path.exists() {
@@ -106,6 +112,7 @@ fn main() -> Result<()> {
         };
         visitor.visit_file(&ast);
         if visitor.function_names.is_empty() {
+            println!("No functions found.");
             continue;
         }
 
