@@ -1,5 +1,7 @@
 mod handles;
 mod utils;
+mod world_state;
+
 use crate::handles::{
     SerializableColliderHandle, SerializableRigidBodyHandle, SerializableRigidBodyType,
 };
@@ -11,12 +13,12 @@ use unitybridge::{AssignUnityLogger, IUnityLog};
 use utils::{
     cancel_axis_velocity, locked_axes_to_unity_constraints, unity_constraints_to_locked_axes,
 };
-use serde::{Deserialize, Serialize};
+use crate::world_state::PhysicsWorld;
 
-static mut PHYSIC_SOLVER_DATA: Option<PhysicsSolverData> = None;
+static mut PHYSIC_SOLVER_DATA: Option<PhysicsWorld> = None;
 
 #[allow(static_mut_refs)]
-fn get_mutable_physics_solver() -> &'static mut PhysicsSolverData<'static> {
+fn get_mutable_physics_solver() -> &'static mut PhysicsWorld<'static> {
     unsafe { PHYSIC_SOLVER_DATA.as_mut().unwrap() }
 }
 
@@ -28,7 +30,7 @@ struct FunctionsToCallFromRust {
 #[unsafe(no_mangle)]
 extern "C" fn init(funcs: *const FunctionsToCallFromRust) {
     unsafe {
-        PHYSIC_SOLVER_DATA = Some(PhysicsSolverData::default());
+        PHYSIC_SOLVER_DATA = Some(PhysicsWorld::default());
         AssignUnityLogger((*funcs).unity_log_ptr);
     }
 }
@@ -724,107 +726,10 @@ struct RapierTransform {
     position: Vector,
 }
 
-// PhysicsSolverData is a struct that holds all the data needed to solve physics.
-pub struct PhysicsSolverData<'a> {
-    pub physics_pipeline: PhysicsPipeline,
-    pub physics_hooks: &'a dyn PhysicsHooks,
-    pub event_handler: &'a dyn EventHandler,
-    pub state : PhysicsState
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct PhysicsState{
-    pub gravity: Vector,
-    pub integration_parameters: IntegrationParameters,
-    pub island_manager: IslandManager,
-    pub broad_phase: DefaultBroadPhase,
-    pub narrow_phase: NarrowPhase,
-    pub impulse_joint_set: ImpulseJointSet,
-    pub multibody_joint_set: MultibodyJointSet,
-    pub ccd_solver: CCDSolver,
-    pub rigid_body_set: RigidBodySet,
-    pub collider_set: ColliderSet,
-}
-
-impl Default for PhysicsState{
-    fn default() -> Self{
-        let mut integration_parameters = IntegrationParameters::default();
-        integration_parameters.dt = 1.0 / 50.0;
-        integration_parameters.min_ccd_dt = 1.0 / 50.0 / 100.0;
-        PhysicsState{
-            gravity: Vector::new(0.0, -9.81, 0.0),
-            integration_parameters,
-            island_manager: IslandManager::new(),
-            broad_phase: DefaultBroadPhase::new(),
-            narrow_phase: NarrowPhase::new(),
-            impulse_joint_set: ImpulseJointSet::new(),
-            multibody_joint_set: MultibodyJointSet::new(),
-            ccd_solver: CCDSolver::new(),
-            rigid_body_set: RigidBodySet::new(),
-            collider_set: ColliderSet::new(),
-        }
-    }
-}
-
-impl Default for PhysicsSolverData<'_> {
-    fn default() -> Self {
-        PhysicsSolverData {
-            physics_pipeline: PhysicsPipeline::new(),
-            physics_hooks: &(),
-            event_handler: &(),
-            state: PhysicsState::default()
-        }
-    }
-}
-
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 struct SerializableCollisionEvent {
     collider1: SerializableColliderHandle,
     collider2: SerializableColliderHandle,
     is_started: bool,
-}
-
-impl PhysicsSolverData<'_> {
-    fn solve(&mut self) -> Vec<SerializableCollisionEvent> {
-        let (collision_send, collision_recv) = std::sync::mpsc::channel();
-        let (contact_force_send, _contact_force_recv) = std::sync::mpsc::channel();
-        let event_handler = ChannelEventCollector::new(collision_send, contact_force_send);
-
-        self.physics_pipeline.step(
-            self.state.gravity,
-            &self.state.integration_parameters,
-            &mut self.state.island_manager,
-            &mut self.state.broad_phase,
-            &mut self.state.narrow_phase,
-            &mut self.state.rigid_body_set,
-            &mut self.state.collider_set,
-            &mut self.state.impulse_joint_set,
-            &mut self.state.multibody_joint_set,
-            &mut self.state.ccd_solver,
-            &(),
-            &event_handler,
-        );
-
-        let mut collision_events = Vec::new();
-        while let Ok(collision_event) = collision_recv.try_recv() {
-            if collision_event.started() {
-                collision_events.push(SerializableCollisionEvent {
-                    collider1: collision_event.collider1().into(),
-                    collider2: collision_event.collider2().into(),
-                    is_started: true,
-                });
-            } else if collision_event.stopped() {
-                collision_events.push(SerializableCollisionEvent {
-                    collider1: collision_event.collider1().into(),
-                    collider2: collision_event.collider2().into(),
-                    is_started: false,
-                });
-            } else {
-                log::warn!("Unknown collision event: {:?}", collision_event);
-            }
-        }
-
-        collision_events
-    }
 }
