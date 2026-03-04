@@ -5,8 +5,6 @@ UNITY_LIB="unitybridge"
 TARGET_X86="x86_64-unknown-linux-gnu"
 cargo build -r --target=$TARGET_X86
 mkdir ../../build_bin/Linux
-cp ${LIB}.bundle ../../build_bin/Linux/
-cp ${UNITY_LIB}.bundle ../../build_bin/Linux/
 cp target/${TARGET_X86}/release/lib${LIB}.so ../../build_bin/Linux/
 cp target/${TARGET_X86}/release/lib${UNITY_LIB}.so ../../build_bin/Linux/
 
