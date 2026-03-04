@@ -13,7 +13,7 @@ using Unity.Mathematics;
 [UnityEditor.InitializeOnLoad]
 #endif
 
-[BurstCompile]
+[BurstCompile(floatPrecision: FloatPrecision.Standard, floatMode: FloatMode.Deterministic)]
 internal static unsafe class RapierBindings
 {
 
@@ -244,7 +244,7 @@ internal static unsafe class RapierBindings
         Debug.Log($"RapierBindingCalls Loaded");
     }
 
-    [BurstCompile]
+    [BurstCompile(floatPrecision: FloatPrecision.Standard, floatMode: FloatMode.Deterministic)]
     static void init_rapier4unity(){
         data.Data.functionsToCallFromRust.Init();
         Init((FunctionsToCallFromRust*)UnsafeUtility.AddressOf(ref data.Data.functionsToCallFromRust));
@@ -270,7 +270,7 @@ internal static unsafe class RapierBindings
 #endif
 
     // Rust -> C#
-    [BurstCompile]
+    [BurstCompile(floatPrecision: FloatPrecision.Standard, floatMode: FloatMode.Deterministic)]
     [StructLayout(LayoutKind.Sequential)]
     public struct FunctionsToCallFromRust {
         public IntPtr unityLogPtr;

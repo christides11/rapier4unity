@@ -67,7 +67,7 @@ fn main() -> Result<()> {
     writeln!(&mut writer, "#endif")?;
 
     writeln!(&mut writer, "")?;
-    writeln!(&mut writer, "[BurstCompile]")?;
+    writeln!(&mut writer, "[BurstCompile(floatPrecision: FloatPrecision.Standard, floatMode: FloatMode.Deterministic)]")?;
     writeln!(&mut writer, "internal static unsafe class RapierBindings")?;
     writeln!(&mut writer, "{{")?;
     writeln!(&mut writer, r#"
@@ -184,7 +184,7 @@ fn main() -> Result<()> {
         Debug.Log($"RapierBindingCalls Loaded");
     }}
 
-    [BurstCompile]
+    [BurstCompile(floatPrecision: FloatPrecision.Standard, floatMode: FloatMode.Deterministic)]
     static void init_rapier4unity(){{
         data.Data.functionsToCallFromRust.Init();
         Init((FunctionsToCallFromRust*)UnsafeUtility.AddressOf(ref data.Data.functionsToCallFromRust));
@@ -210,7 +210,7 @@ fn main() -> Result<()> {
 #endif
 
     // Rust -> C#
-    [BurstCompile]
+    [BurstCompile(floatPrecision: FloatPrecision.Standard, floatMode: FloatMode.Deterministic)]
     [StructLayout(LayoutKind.Sequential)]
     public struct FunctionsToCallFromRust {{
         public IntPtr unityLogPtr;
