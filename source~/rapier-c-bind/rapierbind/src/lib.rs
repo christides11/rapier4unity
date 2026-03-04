@@ -11,6 +11,7 @@ use unitybridge::{AssignUnityLogger, IUnityLog};
 use utils::{
     cancel_axis_velocity, locked_axes_to_unity_constraints, unity_constraints_to_locked_axes,
 };
+use serde::{Deserialize, Serialize};
 
 static mut PHYSIC_SOLVER_DATA: Option<PhysicsSolverData> = None;
 
@@ -89,13 +90,14 @@ extern "C" fn free_collision_events(ptr: *mut RawArray<SerializableCollisionEven
 
 #[unsafe(no_mangle)]
 extern "C" fn set_gravity(x: f32, y: f32, z: f32) {
-    get_mutable_physics_solver().gravity = Vector::new(x, y, z);
+    get_mutable_physics_solver().state.gravity = Vector::new(x, y, z);
 }
 
 #[unsafe(no_mangle)]
 extern "C" fn set_time_step(dt: f32) {
-    get_mutable_physics_solver().integration_parameters.dt = dt;
+    get_mutable_physics_solver().state.integration_parameters.dt = dt;
     get_mutable_physics_solver()
+        .state
         .integration_parameters
         .min_ccd_dt = dt / 100.0;
 }
@@ -116,7 +118,7 @@ extern "C" fn add_cuboid_collider(
         .density(mass)
         .sensor(is_sensor)
         .build();
-    psd.collider_set.insert(collider).into()
+    psd.state.collider_set.insert(collider).into()
 }
 
 #[unsafe(no_mangle)]
@@ -131,7 +133,7 @@ extern "C" fn add_sphere_collider(
         .active_events(ActiveEvents::COLLISION_EVENTS)
         .sensor(is_sensor)
         .build();
-    psd.collider_set.insert(collider).into()
+    psd.state.collider_set.insert(collider).into()
 }
 
 #[unsafe(no_mangle)]
@@ -147,7 +149,7 @@ extern "C" fn add_capsule_collider(
         .active_events(ActiveEvents::COLLISION_EVENTS)
         .sensor(is_sensor)
         .build();
-    psd.collider_set.insert(collider).into()
+    psd.state.collider_set.insert(collider).into()
 }
 
 // TODO Investigate optimizing this a bit
@@ -193,7 +195,7 @@ extern "C" fn add_mesh_collider(
             .density(mass)
             .sensor(is_sensor)
             .build();
-        psd.collider_set.insert(collider).into()
+        psd.state.collider_set.insert(collider).into()
     } else {
         log::warn!("Failed to create mesh collider");
         ColliderHandle::invalid().into()
@@ -231,7 +233,7 @@ extern "C" fn add_convex_mesh_collider(
             .density(mass)
             .sensor(is_sensor)
             .build();
-        psd.collider_set.insert(collider).into()
+        psd.state.collider_set.insert(collider).into()
     } else {
         log::warn!("Failed to create convex hull collider");
         ColliderHandle::invalid().into()
@@ -271,21 +273,21 @@ extern "C" fn add_rigid_body(
         .rotation(AngVector::new(ang_vector.x * angle, ang_vector.y * angle, ang_vector.z * angle))
         .build();
 
-    let rb_handle = psd.rigid_body_set.insert(rigid_body);
-    psd.collider_set
-        .set_parent(collider.into(), Some(rb_handle), &mut psd.rigid_body_set);
+    let rb_handle = psd.state.rigid_body_set.insert(rigid_body);
+    psd.state.collider_set
+        .set_parent(collider.into(), Some(rb_handle), &mut psd.state.rigid_body_set);
     rb_handle.into()
 }
 
 #[unsafe(no_mangle)]
 extern "C" fn remove_rigid_body(rb_handle: SerializableRigidBodyHandle) {
     let psd = get_mutable_physics_solver();
-    psd.rigid_body_set.remove(
+    psd.state.rigid_body_set.remove(
         rb_handle.into(),
-        &mut psd.island_manager,
-        &mut psd.collider_set,
-        &mut psd.impulse_joint_set,
-        &mut psd.multibody_joint_set,
+        &mut psd.state.island_manager,
+        &mut psd.state.collider_set,
+        &mut psd.state.impulse_joint_set,
+        &mut psd.state.multibody_joint_set,
         true,
     );
 }
@@ -300,7 +302,7 @@ extern "C" fn update_rigid_body_properties(
     angular_drag: f32,
 ) {
     let psd = get_mutable_physics_solver();
-    let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
+    let rb = psd.state.rigid_body_set.get_mut(rb_handle.into()).unwrap();
 
     // Update body type if different
     let rb_type_enum: RigidBodyType = rb_type.into();
@@ -338,8 +340,8 @@ extern "C" fn add_fixed_joint(
     let psd = get_mutable_physics_solver();
     let point1: Vector = Vector::new(local_frame1_x, local_frame1_y, local_frame1_z);
     let point2: Vector = Vector::new(local_frame2_x, local_frame2_y, local_frame2_z);
-    let anchor_rb = psd.rigid_body_set.get(rb1_handle.into()).unwrap();
-    let mover_rb = psd.rigid_body_set.get(rb2_handle.into()).unwrap();
+    let anchor_rb = psd.state.rigid_body_set.get(rb1_handle.into()).unwrap();
+    let mover_rb = psd.state.rigid_body_set.get(rb2_handle.into()).unwrap();
     // Construct the local_frame for the first body
     let local_frame1 =
         Pose::from_parts(point1, anchor_rb.position().rotation);
@@ -350,7 +352,7 @@ extern "C" fn add_fixed_joint(
         .local_frame2(local_frame2)
         .contacts_enabled(self_collision);
 
-    psd.impulse_joint_set
+    psd.state.impulse_joint_set
         .insert(rb1_handle.into(), rb2_handle.into(), joint, false)
         .into()
 }
@@ -370,8 +372,8 @@ extern "C" fn add_spherical_joint(
     let psd = get_mutable_physics_solver();
     let point1: Vector = Vector::new(local_frame1_x, local_frame1_y, local_frame1_z);
     let point2: Vector = Vector::new(local_frame2_x, local_frame2_y, local_frame2_z);
-    let anchor_rb = psd.rigid_body_set.get(rb1_handle.into()).unwrap();
-    let mover_rb = psd.rigid_body_set.get(rb2_handle.into()).unwrap();
+    let anchor_rb = psd.state.rigid_body_set.get(rb1_handle.into()).unwrap();
+    let mover_rb = psd.state.rigid_body_set.get(rb2_handle.into()).unwrap();
     // Construct the local_frame for the first body
     let local_frame1 =
         Pose::from_parts(point1, anchor_rb.position().rotation);
@@ -385,7 +387,7 @@ extern "C" fn add_spherical_joint(
         .local_frame2(local_frame2)
         .contacts_enabled(self_collision);
 
-    psd.impulse_joint_set
+    psd.state.impulse_joint_set
         .insert(rb1_handle.into(), rb2_handle.into(), joint, false)
         .into()
 }
@@ -414,7 +416,7 @@ extern "C" fn add_revolute_joint(
         .local_anchor2(point2)
         .contacts_enabled(self_collision);
 
-    psd.impulse_joint_set
+    psd.state.impulse_joint_set
         .insert(rb1_handle.into(), rb2_handle.into(), joint, false)
         .into()
 }
@@ -447,7 +449,7 @@ extern "C" fn add_prismatic_joint(
         // If the anchor is kinematic, then don't collide with the other body
         .contacts_enabled(self_collision);
 
-    psd.impulse_joint_set
+    psd.state.impulse_joint_set
         .insert(rb1_handle.into(), rb2_handle.into(), joint, false)
         .into()
 }
@@ -455,13 +457,13 @@ extern "C" fn add_prismatic_joint(
 #[unsafe(no_mangle)]
 extern "C" fn remove_joint(handle: SerializableImpulseJointHandle) {
     let psd = get_mutable_physics_solver();
-    psd.impulse_joint_set.remove(handle.into(), true);
+    psd.state.impulse_joint_set.remove(handle.into(), true);
 }
 
 #[unsafe(no_mangle)]
 extern "C" fn get_transform(rb_handle: SerializableRigidBodyHandle) -> RapierTransform {
     let psd = get_mutable_physics_solver();
-    let rb = psd.rigid_body_set.get(rb_handle.into()).unwrap();
+    let rb = psd.state.rigid_body_set.get(rb_handle.into()).unwrap();
     let pos = rb.position();
     RapierTransform {
         rotation: Vector4::new(pos.rotation.x, pos.rotation.y, pos.rotation.z, pos.rotation.w),
@@ -477,7 +479,7 @@ extern "C" fn set_transform_position(
     position_z: f32,
 ) {
     let psd = get_mutable_physics_solver();
-    let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
+    let rb = psd.state.rigid_body_set.get_mut(rb_handle.into()).unwrap();
     let iso = Pose::from_parts(
         Vector::new(position_x, position_y, position_z),
         // This is a trick to make sure the order of the position versus rotation will work in either order
@@ -495,7 +497,7 @@ extern "C" fn set_transform_rotation(
     rotation_w: f32,
 ) {
     let psd = get_mutable_physics_solver();
-    let rb: &mut RigidBody = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
+    let rb: &mut RigidBody = psd.state.rigid_body_set.get_mut(rb_handle.into()).unwrap();
     rb.set_next_kinematic_rotation(Rotation::from_vec4(Vec4::new(rotation_w, rotation_x, rotation_y, rotation_z)).normalize());
 }
 
@@ -511,7 +513,7 @@ extern "C" fn set_transform(
     rotation_w: f32,
 ) {
     let psd = get_mutable_physics_solver();
-    let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
+    let rb = psd.state.rigid_body_set.get_mut(rb_handle.into()).unwrap();
     let iso = Pose::from_parts(Vector::new(position_x, position_y, position_z), Rot3::from_vec4(Vec4::new(rotation_w, rotation_x, rotation_y, rotation_z)).normalize());
     rb.set_next_kinematic_position(iso);
 }
@@ -524,7 +526,7 @@ extern "C" fn set_linear_velocity(
     velocity_z: f32,
 ) {
     let psd = get_mutable_physics_solver();
-    let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
+    let rb = psd.state.rigid_body_set.get_mut(rb_handle.into()).unwrap();
     rb.set_linvel(Vector::new(velocity_x, velocity_y, velocity_z), true);
 }
 
@@ -536,21 +538,21 @@ extern "C" fn set_angular_velocity(
     velocity_z: f32,
 ) {
     let psd = get_mutable_physics_solver();
-    let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
+    let rb = psd.state.rigid_body_set.get_mut(rb_handle.into()).unwrap();
     rb.set_angvel(Vector::new(velocity_x, velocity_y, velocity_z), true);
 }
 
 #[unsafe(no_mangle)]
 extern "C" fn get_linear_velocity(rb_handle: SerializableRigidBodyHandle) -> Vector {
     let psd = get_mutable_physics_solver();
-    let rb = psd.rigid_body_set.get(rb_handle.into()).unwrap();
+    let rb = psd.state.rigid_body_set.get(rb_handle.into()).unwrap();
     rb.linvel().clone()
 }
 
 #[unsafe(no_mangle)]
 extern "C" fn get_angular_velocity(rb_handle: SerializableRigidBodyHandle) -> Vector {
     let psd = get_mutable_physics_solver();
-    let rb = psd.rigid_body_set.get(rb_handle.into()).unwrap();
+    let rb = psd.state.rigid_body_set.get(rb_handle.into()).unwrap();
     rb.angvel().clone()
 }
 
@@ -564,12 +566,12 @@ extern "C" fn add_force(
     mode: ForceMode,
 ) {
     let psd = get_mutable_physics_solver();
-    let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
+    let rb = psd.state.rigid_body_set.get_mut(rb_handle.into()).unwrap();
     let mut linvel = rb.linvel().clone();
     match mode {
         ForceMode::Force => {
             linvel +=
-                Vector::new(force_x, force_y, force_z) * psd.integration_parameters.dt / rb.mass();
+                Vector::new(force_x, force_y, force_z) * psd.state.integration_parameters.dt / rb.mass();
         }
         ForceMode::Impulse => {
             linvel += Vector::new(force_x, force_y, force_z) / rb.mass();
@@ -578,7 +580,7 @@ extern "C" fn add_force(
             linvel += Vector::new(force_x, force_y, force_z);
         }
         ForceMode::Acceleration => {
-            linvel += Vector::new(force_x, force_y, force_z) * psd.integration_parameters.dt;
+            linvel += Vector::new(force_x, force_y, force_z) * psd.state.integration_parameters.dt;
         }
     }
     // log::info!("linvel: {:?}, mode: {:?}", linvel, mode);
@@ -594,12 +596,12 @@ extern "C" fn add_torque(
     mode: ForceMode,
 ) {
     let psd = get_mutable_physics_solver();
-    let rb = psd.rigid_body_set.get_mut(rb_handle.into()).unwrap();
+    let rb = psd.state.rigid_body_set.get_mut(rb_handle.into()).unwrap();
     let mut angvel = rb.angvel().clone();
     match mode {
         ForceMode::Force => {
             angvel +=
-                Vector::new(torque_x, torque_y, torque_z) * psd.integration_parameters.dt / rb.mass();
+                Vector::new(torque_x, torque_y, torque_z) * psd.state.integration_parameters.dt / rb.mass();
         }
         ForceMode::Impulse => {
             angvel += Vector::new(torque_x, torque_y, torque_z) / rb.mass();
@@ -608,7 +610,7 @@ extern "C" fn add_torque(
             angvel += Vector::new(torque_x, torque_y, torque_z);
         }
         ForceMode::Acceleration => {
-            angvel += Vector::new(torque_x, torque_y, torque_z) * psd.integration_parameters.dt;
+            angvel += Vector::new(torque_x, torque_y, torque_z) * psd.state.integration_parameters.dt;
         }
     }
     rb.set_angvel(angvel, true);
@@ -634,19 +636,19 @@ pub extern "C" fn set_integration_parameters(
     length_unit: f32,
 ) {
     let psd = get_mutable_physics_solver();
-    psd.integration_parameters.dt = dt;
-    psd.integration_parameters.min_ccd_dt = dt / 100.0;
-    psd.integration_parameters.num_solver_iterations = solver_iterations;
-    psd.integration_parameters.num_internal_pgs_iterations = solver_pgs_iterations;
+    psd.state.integration_parameters.dt = dt;
+    psd.state.integration_parameters.min_ccd_dt = dt / 100.0;
+    psd.state.integration_parameters.num_solver_iterations = solver_iterations;
+    psd.state.integration_parameters.num_internal_pgs_iterations = solver_pgs_iterations;
     //psd.integration_parameters.friction_model = ;
-    psd.integration_parameters
+    psd.state.integration_parameters
         .num_internal_stabilization_iterations = solver_stabilization_iterations;
-    psd.integration_parameters.max_ccd_substeps = ccd_substeps;
-    psd.integration_parameters.contact_softness = SpringCoefficients::new(contact_frequency, contact_damping_ratio);
-    psd.integration_parameters.normalized_prediction_distance = prediction_distance;
-    psd.integration_parameters
+    psd.state.integration_parameters.max_ccd_substeps = ccd_substeps;
+    psd.state.integration_parameters.contact_softness = SpringCoefficients::new(contact_frequency, contact_damping_ratio);
+    psd.state.integration_parameters.normalized_prediction_distance = prediction_distance;
+    psd.state.integration_parameters
         .normalized_max_corrective_velocity = max_corrective_velocity;
-    psd.integration_parameters.length_unit = length_unit;
+    psd.state.integration_parameters.length_unit = length_unit;
 }
 
 // Scene Query
@@ -673,7 +675,8 @@ extern "C" fn cast_ray(
 ) -> bool {
     let psd = get_mutable_physics_solver();
     let ray = Ray::new(Vector::new(from_x, from_y, from_z), Vector::new(dir_x, dir_y, dir_z));
-    if let Some((handle, intersection)) = psd.broad_phase.as_query_pipeline(psd.narrow_phase.query_dispatcher(), &psd.rigid_body_set, &psd.collider_set, QueryFilter::default()).cast_ray_and_get_normal(
+    let pstate = &psd.state;
+    if let Some((handle, intersection)) = pstate.broad_phase.as_query_pipeline(pstate.narrow_phase.query_dispatcher(), &pstate.rigid_body_set, &pstate.collider_set, QueryFilter::default()).cast_ray_and_get_normal(
         &ray,
         4.0,
         true
@@ -723,41 +726,53 @@ struct RapierTransform {
 
 // PhysicsSolverData is a struct that holds all the data needed to solve physics.
 pub struct PhysicsSolverData<'a> {
+    pub physics_pipeline: PhysicsPipeline,
+    pub physics_hooks: &'a dyn PhysicsHooks,
+    pub event_handler: &'a dyn EventHandler,
+    pub state : PhysicsState
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct PhysicsState{
     pub gravity: Vector,
     pub integration_parameters: IntegrationParameters,
-    pub physics_pipeline: PhysicsPipeline,
     pub island_manager: IslandManager,
     pub broad_phase: DefaultBroadPhase,
     pub narrow_phase: NarrowPhase,
     pub impulse_joint_set: ImpulseJointSet,
     pub multibody_joint_set: MultibodyJointSet,
     pub ccd_solver: CCDSolver,
-    pub physics_hooks: &'a dyn PhysicsHooks,
-    pub event_handler: &'a dyn EventHandler,
-
     pub rigid_body_set: RigidBodySet,
     pub collider_set: ColliderSet,
 }
 
-impl Default for PhysicsSolverData<'_> {
-    fn default() -> Self {
+impl Default for PhysicsState{
+    fn default() -> Self{
         let mut integration_parameters = IntegrationParameters::default();
         integration_parameters.dt = 1.0 / 50.0;
         integration_parameters.min_ccd_dt = 1.0 / 50.0 / 100.0;
-        PhysicsSolverData {
+        PhysicsState{
             gravity: Vector::new(0.0, -9.81, 0.0),
             integration_parameters,
-            physics_pipeline: PhysicsPipeline::new(),
             island_manager: IslandManager::new(),
             broad_phase: DefaultBroadPhase::new(),
             narrow_phase: NarrowPhase::new(),
             impulse_joint_set: ImpulseJointSet::new(),
             multibody_joint_set: MultibodyJointSet::new(),
             ccd_solver: CCDSolver::new(),
-            physics_hooks: &(),
-            event_handler: &(),
             rigid_body_set: RigidBodySet::new(),
             collider_set: ColliderSet::new(),
+        }
+    }
+}
+
+impl Default for PhysicsSolverData<'_> {
+    fn default() -> Self {
+        PhysicsSolverData {
+            physics_pipeline: PhysicsPipeline::new(),
+            physics_hooks: &(),
+            event_handler: &(),
+            state: PhysicsState::default()
         }
     }
 }
@@ -777,16 +792,16 @@ impl PhysicsSolverData<'_> {
         let event_handler = ChannelEventCollector::new(collision_send, contact_force_send);
 
         self.physics_pipeline.step(
-            self.gravity,
-            &self.integration_parameters,
-            &mut self.island_manager,
-            &mut self.broad_phase,
-            &mut self.narrow_phase,
-            &mut self.rigid_body_set,
-            &mut self.collider_set,
-            &mut self.impulse_joint_set,
-            &mut self.multibody_joint_set,
-            &mut self.ccd_solver,
+            self.state.gravity,
+            &self.state.integration_parameters,
+            &mut self.state.island_manager,
+            &mut self.state.broad_phase,
+            &mut self.state.narrow_phase,
+            &mut self.state.rigid_body_set,
+            &mut self.state.collider_set,
+            &mut self.state.impulse_joint_set,
+            &mut self.state.multibody_joint_set,
+            &mut self.state.ccd_solver,
             &(),
             &event_handler,
         );

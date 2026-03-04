@@ -8,5 +8,6 @@ crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
 log = "0.4.27"
-rapier3d = { version = "0.32.0", features = [ "enhanced-determinism" ] }
+rapier3d = { version = "0.32.0", features = [ "enhanced-determinism", "serde-serialize" ] }
 unitybridge = { path = "../unitybridge" }
+serde = { version = "1", features = ["derive"] }
