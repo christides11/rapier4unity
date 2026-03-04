@@ -24,6 +24,8 @@ internal static unsafe class RapierBindings
 
 #if UNITY_EDITOR_OSX
 	const string k_DLLPath = "Packages/rapier4unity/build_bin/macOS/rapier_c_bind.bundle";
+#elif UNITY_EDITOR_LINUX
+    const string k_DLLPath = "Packages/rapier4unity/build_bin/Linux/librapier_c_bind.so";
 #else
 	const string k_DLLPath = "Packages/rapier4unity/build_bin/Windows/rapier_c_bind.dll";
 #endif

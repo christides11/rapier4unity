@@ -84,10 +84,12 @@ namespace RapierPhysics
             return instance;
         }
 
+#if UNITY_EDITOR
         public static SerializedObject GetSerializedSettings()
         {
             return new SerializedObject(GetOrCreateSettings());
         }
+#endif
 
         public void ApplySettings()
         {
