@@ -1,3 +1,6 @@
+LIB="rapier_c_bind"
+UNITY_LIB="unitybridge"
+
 # Build Android
 TARGET_ANDROID="aarch64-linux-android"
 ANDROID_NDK="C:/Program Files/Unity/Hub/Editor/6000.3.8f1/Editor/Data/PlaybackEngines/AndroidPlayer/NDK"

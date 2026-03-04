@@ -10,10 +10,3 @@ crate-type = ["staticlib", "cdylib"]
 log = "0.4.27"
 rapier3d = { version = "0.32.0", features = [ "enhanced-determinism" ] }
 unitybridge = { path = "../unitybridge" }
-
-[target.aarch64-linux-android]
-rustflags = [
-    "-Clink-args=-Wl,-z,max-page-size=16384",
-    "-Clink-args=-Wl,-z,common-page-size=16384",
-    "-Clink-args=-Wl,--script=./android_linker.ld"
-]
