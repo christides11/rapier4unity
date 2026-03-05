@@ -82,6 +82,12 @@ extern "C" fn solve() -> *const RawArray<SerializableCollisionEvent> {
 }
 
 #[unsafe(no_mangle)]
+extern "C" fn get_physics_world_hash() -> u64 {
+    get_mutable_physics_solver().hash()
+}
+
+
+#[unsafe(no_mangle)]
 extern "C" fn free_collision_events(ptr: *mut RawArray<SerializableCollisionEvent>) {
     unsafe {
         let info = Box::from_raw(ptr);

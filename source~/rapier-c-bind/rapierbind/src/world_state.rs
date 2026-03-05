@@ -3,6 +3,7 @@ use rapier3d::geometry::{ColliderSet, DefaultBroadPhase, NarrowPhase};
 use rapier3d::math::Vector;
 use rapier3d::pipeline::{ChannelEventCollector, EventHandler, PhysicsHooks, PhysicsPipeline};
 use serde::{Deserialize, Serialize};
+use xxhash_rust::xxh64::xxh64;
 use crate::SerializableCollisionEvent;
 
 // PhysicsSolverData is a struct that holds all the data needed to solve physics.
@@ -59,6 +60,11 @@ impl Default for PhysicsWorld<'_> {
 }
 
 impl PhysicsWorld<'_> {
+    pub fn hash(&mut self) -> u64{
+        let ss = bincode::serde::encode_to_vec(&self.state, bincode::config::standard()).unwrap();
+        xxh64(&ss, 0)
+    }
+
     pub fn solve(&mut self) -> Vec<SerializableCollisionEvent> {
         let (collision_send, collision_recv) = std::sync::mpsc::channel();
         let (contact_force_send, _contact_force_recv) = std::sync::mpsc::channel();

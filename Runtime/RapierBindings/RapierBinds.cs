@@ -37,6 +37,7 @@ internal static unsafe class RapierBindings
 	public static void Version() => ((delegate* unmanaged[Cdecl]<void>) data.Data.version)();
 	public static void Teardown() => ((delegate* unmanaged[Cdecl]<void>) data.Data.teardown)();
 	public static RawArray<CollisionEvent>* Solve() => ((delegate* unmanaged[Cdecl]<RawArray<CollisionEvent>*>) data.Data.solve)();
+	public static ulong GetPhysicsWorldHash() => ((delegate* unmanaged[Cdecl]<ulong>) data.Data.getPhysicsWorldHash)();
 	public static void FreeCollisionEvents(RawArray<CollisionEvent>* ptr) => ((delegate* unmanaged[Cdecl]<RawArray<CollisionEvent>*, void>) data.Data.freeCollisionEvents)(ptr);
 	public static void SetGravity(float x, float y, float z) => ((delegate* unmanaged[Cdecl]<float, float, float, void>) data.Data.setGravity)(x, y, z);
 	public static void SetTimeStep(float dt) => ((delegate* unmanaged[Cdecl]<float, void>) data.Data.setTimeStep)(dt);
@@ -76,6 +77,8 @@ internal static unsafe class RapierBindings
 	public static extern unsafe void Teardown();
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="solve")]
 	public static extern unsafe RawArray<CollisionEvent>* Solve();
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="get_physics_world_hash")]
+	public static extern unsafe ulong GetPhysicsWorldHash();
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="free_collision_events")]
 	public static extern unsafe void FreeCollisionEvents(RawArray<CollisionEvent>* ptr);
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="set_gravity")]
@@ -204,6 +207,7 @@ internal static unsafe class RapierBindings
 			version = NativeLoader.GetFunction(loaded_lib, "version");
 			teardown = NativeLoader.GetFunction(loaded_lib, "teardown");
 			solve = NativeLoader.GetFunction(loaded_lib, "solve");
+			getPhysicsWorldHash = NativeLoader.GetFunction(loaded_lib, "get_physics_world_hash");
 			freeCollisionEvents = NativeLoader.GetFunction(loaded_lib, "free_collision_events");
 			setGravity = NativeLoader.GetFunction(loaded_lib, "set_gravity");
 			setTimeStep = NativeLoader.GetFunction(loaded_lib, "set_time_step");
@@ -254,6 +258,7 @@ internal static unsafe class RapierBindings
 		public IntPtr version;
 		public IntPtr teardown;
 		public IntPtr solve;
+		public IntPtr getPhysicsWorldHash;
 		public IntPtr freeCollisionEvents;
 		public IntPtr setGravity;
 		public IntPtr setTimeStep;
