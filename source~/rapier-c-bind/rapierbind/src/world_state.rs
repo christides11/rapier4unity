@@ -1,10 +1,10 @@
-use rapier3d::dynamics::{CCDSolver, ImpulseJointSet, IntegrationParameters, IslandManager, MultibodyJointSet, RigidBodySet};
+use rapier3d::dynamics::{CCDSolver, ImpulseJointSet, IntegrationParameters, IslandManager, MultibodyJointSet, RigidBodySet, SpringCoefficients};
 use rapier3d::geometry::{ColliderSet, DefaultBroadPhase, NarrowPhase};
 use rapier3d::math::Vector;
 use rapier3d::pipeline::{ChannelEventCollector, EventHandler, PhysicsHooks, PhysicsPipeline};
 use serde::{Deserialize, Serialize};
 use xxhash_rust::xxh64::xxh64;
-use crate::SerializableCollisionEvent;
+use crate::{get_mutable_physics_solver, SerializableCollisionEvent};
 
 // PhysicsSolverData is a struct that holds all the data needed to solve physics.
 pub struct PhysicsWorld<'a> {
@@ -106,4 +106,58 @@ impl PhysicsWorld<'_> {
 
         collision_events
     }
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn set_gravity(x: f32, y: f32, z: f32) {
+    get_mutable_physics_solver().state.gravity = Vector::new(x, y, z);
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn set_time_step(dt: f32) {
+    get_mutable_physics_solver().state.integration_parameters.dt = dt;
+    get_mutable_physics_solver()
+        .state
+        .integration_parameters
+        .min_ccd_dt = dt / 100.0;
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn set_integration_parameters(
+    // Time step
+    dt: f32,
+    // Solver parameters
+    solver_iterations: usize,
+    solver_pgs_iterations: usize,
+    solver_stabilization_iterations: usize,
+    ccd_substeps: usize,
+    // Damping parameters
+    contact_damping_ratio: f32,
+    // Frequency parameters
+    contact_frequency: f32,
+    // Prediction parameters
+    prediction_distance: f32,
+    max_corrective_velocity: f32,
+    // Length unit
+    length_unit: f32,
+) {
+    let psd = get_mutable_physics_solver();
+    psd.state.integration_parameters.dt = dt;
+    psd.state.integration_parameters.min_ccd_dt = dt / 100.0;
+    psd.state.integration_parameters.num_solver_iterations = solver_iterations;
+    psd.state.integration_parameters.num_internal_pgs_iterations = solver_pgs_iterations;
+    //psd.integration_parameters.friction_model = ;
+    psd.state.integration_parameters
+        .num_internal_stabilization_iterations = solver_stabilization_iterations;
+    psd.state.integration_parameters.max_ccd_substeps = ccd_substeps;
+    psd.state.integration_parameters.contact_softness = SpringCoefficients::new(contact_frequency, contact_damping_ratio);
+    psd.state.integration_parameters.normalized_prediction_distance = prediction_distance;
+    psd.state.integration_parameters
+        .normalized_max_corrective_velocity = max_corrective_velocity;
+    psd.state.integration_parameters.length_unit = length_unit;
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn get_physics_world_hash() -> u64 {
+    get_mutable_physics_solver().hash()
 }

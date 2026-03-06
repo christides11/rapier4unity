@@ -15,6 +15,24 @@ namespace Packages.rapier4unity.Runtime
 		internal ColliderHandle m_Collider;
 	}
 
+	public struct RapierShapecastHit
+	{
+		internal Vector3 m_Point;
+		internal Vector3 m_Normal;
+		internal float m_Distance;
+		internal Vector2 m_UV;
+		internal ColliderHandle m_Collider;
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct RapierShapecastOptions
+	{
+		internal float m_MaxTimeOfImpact;
+		internal float m_TargetDistance;
+		internal bool m_StopAtPenetration;
+		internal bool m_ComputeImpactGeometryOnPenetration;
+	}
+
 	internal static class BindingExtensions
 	{
 		public static bool CastRay(float from_x, float from_y, float from_z, float dir_x, float dir_y, float dir_z, out RapierRaycastHit hit)
@@ -23,6 +41,17 @@ namespace Packages.rapier4unity.Runtime
 			{
 				RapierRaycastHit* hitPtr = stackalloc RapierRaycastHit[1];
 				var did_hit = RapierBindings.CastRay(from_x, from_y, from_z, dir_x, dir_y, dir_z, hitPtr);
+				hit = *hitPtr;
+				return did_hit;
+			}
+		}
+
+		public static bool CastCuboid(float from_x, float from_y, float from_z, float dir_x, float dir_y, float dir_z, float half_x, float half_y, float half_z, RapierShapecastOptions options, out RapierShapecastHit hit)
+		{
+			unsafe
+			{
+				RapierShapecastHit* hitPtr = stackalloc RapierShapecastHit[1];
+				var did_hit = RapierBindings.CastCuboid(from_x, from_y, from_z, dir_x, dir_y, dir_z, half_x, half_y, half_z, options, hitPtr);
 				hit = *hitPtr;
 				return did_hit;
 			}

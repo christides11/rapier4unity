@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using RapierPhysics;
 using Unity.CompilationPipeline.Common.ILPostProcessing;
 using Unity.Rapier4Unity.CodeGen;
 
@@ -73,7 +74,7 @@ public class Patch : ILPostProcessor
 public class PhysicsPostProcessor
 {
     ModuleDefinition m_AssemblyMainModule;
-    Type m_Rapier = typeof(RapierLoop);
+    Type m_Rapier = typeof(RapierOverrides);
     BindingFlags m_DefaultBindingFlags = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
 
     // Rigidbody replacements
