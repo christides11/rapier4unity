@@ -6,6 +6,7 @@ use std::env::args;
 use std::fs::OpenOptions;
 use std::io::{BufWriter, Write};
 use syn::visit::Visit;
+use walkdir::WalkDir;
 
 // static type translation hashmap
 static RUST_TYPE_TO_CSHARP: Map<&'static str, &'static str> = phf_map! {
@@ -395,15 +396,11 @@ fn get_typename(ty: &syn::Type) -> String {
 
 // get all rust files in the input folder
 fn get_rust_files(folder: &str) -> Result<Vec<String>> {
-    let mut files = Vec::new();
-    for entry in std::fs::read_dir(folder)? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_file() && path.extension() == Some("rs".as_ref()) {
-            // get absolute path from relative path
-            let path = path.canonicalize()?;
-            files.push(path.to_string_lossy().to_string());
-        }
-    }
+    let files = WalkDir::new(folder)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension() == Some("rs".as_ref()))
+        .map(|e| e.path().canonicalize().unwrap().to_string_lossy().to_string())
+        .collect();
     Ok(files)
 }

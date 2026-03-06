@@ -41,11 +41,6 @@ internal static unsafe class RapierBindings
 	public static void FreeCollisionEvents(RawArray<CollisionEvent>* ptr) => ((delegate* unmanaged[Cdecl]<RawArray<CollisionEvent>*, void>) data.Data.freeCollisionEvents)(ptr);
 	public static void SetGravity(float x, float y, float z) => ((delegate* unmanaged[Cdecl]<float, float, float, void>) data.Data.setGravity)(x, y, z);
 	public static void SetTimeStep(float dt) => ((delegate* unmanaged[Cdecl]<float, void>) data.Data.setTimeStep)(dt);
-	public static ColliderHandle AddCuboidCollider(float halfExtentsX, float halfExtentsY, float halfExtentsZ, float mass, bool isSensor) => ((delegate* unmanaged[Cdecl]<float, float, float, float, bool, ColliderHandle>) data.Data.addCuboidCollider)(halfExtentsX, halfExtentsY, halfExtentsZ, mass, isSensor);
-	public static ColliderHandle AddSphereCollider(float radius, float mass, bool isSensor) => ((delegate* unmanaged[Cdecl]<float, float, bool, ColliderHandle>) data.Data.addSphereCollider)(radius, mass, isSensor);
-	public static ColliderHandle AddCapsuleCollider(float halfHeight, float radius, float mass, bool isSensor) => ((delegate* unmanaged[Cdecl]<float, float, float, bool, ColliderHandle>) data.Data.addCapsuleCollider)(halfHeight, radius, mass, isSensor);
-	public static ColliderHandle AddMeshCollider(float* verticesPtr, UIntPtr verticesCount, uint* indicesPtr, UIntPtr indicesCount, float mass, bool isSensor) => ((delegate* unmanaged[Cdecl]<float*, UIntPtr, uint*, UIntPtr, float, bool, ColliderHandle>) data.Data.addMeshCollider)(verticesPtr, verticesCount, indicesPtr, indicesCount, mass, isSensor);
-	public static ColliderHandle AddConvexMeshCollider(float* verticesPtr, UIntPtr verticesCount, float mass, bool isSensor) => ((delegate* unmanaged[Cdecl]<float*, UIntPtr, float, bool, ColliderHandle>) data.Data.addConvexMeshCollider)(verticesPtr, verticesCount, mass, isSensor);
 	public static RigidBodyHandle AddRigidBody(ColliderHandle collider, RigidBodyType rbType, float positionX, float positionY, float positionZ, float rotationX, float rotationY, float rotationZ, float rotationW) => ((delegate* unmanaged[Cdecl]<ColliderHandle, RigidBodyType, float, float, float, float, float, float, float, RigidBodyHandle>) data.Data.addRigidBody)(collider, rbType, positionX, positionY, positionZ, rotationX, rotationY, rotationZ, rotationW);
 	public static void RemoveRigidBody(RigidBodyHandle rbHandle) => ((delegate* unmanaged[Cdecl]<RigidBodyHandle, void>) data.Data.removeRigidBody)(rbHandle);
 	public static void UpdateRigidBodyProperties(RigidBodyHandle rbHandle, RigidBodyType rbType, bool enableCcd, uint constraints, float linearDrag, float angularDrag) => ((delegate* unmanaged[Cdecl]<RigidBodyHandle, RigidBodyType, bool, uint, float, float, void>) data.Data.updateRigidBodyProperties)(rbHandle, rbType, enableCcd, constraints, linearDrag, angularDrag);
@@ -85,16 +80,6 @@ internal static unsafe class RapierBindings
 	public static extern unsafe void SetGravity(float x, float y, float z);
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="set_time_step")]
 	public static extern unsafe void SetTimeStep(float dt);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_cuboid_collider")]
-	public static extern unsafe ColliderHandle AddCuboidCollider(float halfExtentsX, float halfExtentsY, float halfExtentsZ, float mass, bool isSensor);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_sphere_collider")]
-	public static extern unsafe ColliderHandle AddSphereCollider(float radius, float mass, bool isSensor);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_capsule_collider")]
-	public static extern unsafe ColliderHandle AddCapsuleCollider(float halfHeight, float radius, float mass, bool isSensor);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_mesh_collider")]
-	public static extern unsafe ColliderHandle AddMeshCollider(float* verticesPtr, UIntPtr verticesCount, uint* indicesPtr, UIntPtr indicesCount, float mass, bool isSensor);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_convex_mesh_collider")]
-	public static extern unsafe ColliderHandle AddConvexMeshCollider(float* verticesPtr, UIntPtr verticesCount, float mass, bool isSensor);
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_rigid_body")]
 	public static extern unsafe RigidBodyHandle AddRigidBody(ColliderHandle collider, RigidBodyType rbType, float positionX, float positionY, float positionZ, float rotationX, float rotationY, float rotationZ, float rotationW);
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="remove_rigid_body")]
@@ -181,6 +166,24 @@ internal static unsafe class RapierBindings
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_sqrt")]
 	public static extern unsafe float CfSqrt(float x);
 #endif
+#if UNITY_EDITOR && !DISABLE_DYNAMIC_RAPIER_LOAD
+	public static ColliderHandle AddCuboidCollider(float halfExtentsX, float halfExtentsY, float halfExtentsZ, float mass, bool isSensor) => ((delegate* unmanaged[Cdecl]<float, float, float, float, bool, ColliderHandle>) data.Data.addCuboidCollider)(halfExtentsX, halfExtentsY, halfExtentsZ, mass, isSensor);
+	public static ColliderHandle AddSphereCollider(float radius, float mass, bool isSensor) => ((delegate* unmanaged[Cdecl]<float, float, bool, ColliderHandle>) data.Data.addSphereCollider)(radius, mass, isSensor);
+	public static ColliderHandle AddCapsuleCollider(float halfHeight, float radius, float mass, bool isSensor) => ((delegate* unmanaged[Cdecl]<float, float, float, bool, ColliderHandle>) data.Data.addCapsuleCollider)(halfHeight, radius, mass, isSensor);
+	public static ColliderHandle AddMeshCollider(float* verticesPtr, UIntPtr verticesCount, uint* indicesPtr, UIntPtr indicesCount, float mass, bool isSensor) => ((delegate* unmanaged[Cdecl]<float*, UIntPtr, uint*, UIntPtr, float, bool, ColliderHandle>) data.Data.addMeshCollider)(verticesPtr, verticesCount, indicesPtr, indicesCount, mass, isSensor);
+	public static ColliderHandle AddConvexMeshCollider(float* verticesPtr, UIntPtr verticesCount, float mass, bool isSensor) => ((delegate* unmanaged[Cdecl]<float*, UIntPtr, float, bool, ColliderHandle>) data.Data.addConvexMeshCollider)(verticesPtr, verticesCount, mass, isSensor);
+#else
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_cuboid_collider")]
+	public static extern unsafe ColliderHandle AddCuboidCollider(float halfExtentsX, float halfExtentsY, float halfExtentsZ, float mass, bool isSensor);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_sphere_collider")]
+	public static extern unsafe ColliderHandle AddSphereCollider(float radius, float mass, bool isSensor);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_capsule_collider")]
+	public static extern unsafe ColliderHandle AddCapsuleCollider(float halfHeight, float radius, float mass, bool isSensor);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_mesh_collider")]
+	public static extern unsafe ColliderHandle AddMeshCollider(float* verticesPtr, UIntPtr verticesCount, uint* indicesPtr, UIntPtr indicesCount, float mass, bool isSensor);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="add_convex_mesh_collider")]
+	public static extern unsafe ColliderHandle AddConvexMeshCollider(float* verticesPtr, UIntPtr verticesCount, float mass, bool isSensor);
+#endif
 
 #if UNITY_EDITOR && !DISABLE_DYNAMIC_RAPIER_LOAD
     // C# -> Rust
@@ -211,11 +214,6 @@ internal static unsafe class RapierBindings
 			freeCollisionEvents = NativeLoader.GetFunction(loaded_lib, "free_collision_events");
 			setGravity = NativeLoader.GetFunction(loaded_lib, "set_gravity");
 			setTimeStep = NativeLoader.GetFunction(loaded_lib, "set_time_step");
-			addCuboidCollider = NativeLoader.GetFunction(loaded_lib, "add_cuboid_collider");
-			addSphereCollider = NativeLoader.GetFunction(loaded_lib, "add_sphere_collider");
-			addCapsuleCollider = NativeLoader.GetFunction(loaded_lib, "add_capsule_collider");
-			addMeshCollider = NativeLoader.GetFunction(loaded_lib, "add_mesh_collider");
-			addConvexMeshCollider = NativeLoader.GetFunction(loaded_lib, "add_convex_mesh_collider");
 			addRigidBody = NativeLoader.GetFunction(loaded_lib, "add_rigid_body");
 			removeRigidBody = NativeLoader.GetFunction(loaded_lib, "remove_rigid_body");
 			updateRigidBodyProperties = NativeLoader.GetFunction(loaded_lib, "update_rigid_body_properties");
@@ -250,6 +248,11 @@ internal static unsafe class RapierBindings
 			cfTan = NativeLoader.GetFunction(loaded_lib, "cf_tan");
 			cfTanh = NativeLoader.GetFunction(loaded_lib, "cf_tanh");
 			cfSqrt = NativeLoader.GetFunction(loaded_lib, "cf_sqrt");
+			addCuboidCollider = NativeLoader.GetFunction(loaded_lib, "add_cuboid_collider");
+			addSphereCollider = NativeLoader.GetFunction(loaded_lib, "add_sphere_collider");
+			addCapsuleCollider = NativeLoader.GetFunction(loaded_lib, "add_capsule_collider");
+			addMeshCollider = NativeLoader.GetFunction(loaded_lib, "add_mesh_collider");
+			addConvexMeshCollider = NativeLoader.GetFunction(loaded_lib, "add_convex_mesh_collider");
         }
 
         // Raw function pointers
@@ -262,11 +265,6 @@ internal static unsafe class RapierBindings
 		public IntPtr freeCollisionEvents;
 		public IntPtr setGravity;
 		public IntPtr setTimeStep;
-		public IntPtr addCuboidCollider;
-		public IntPtr addSphereCollider;
-		public IntPtr addCapsuleCollider;
-		public IntPtr addMeshCollider;
-		public IntPtr addConvexMeshCollider;
 		public IntPtr addRigidBody;
 		public IntPtr removeRigidBody;
 		public IntPtr updateRigidBodyProperties;
@@ -301,6 +299,11 @@ internal static unsafe class RapierBindings
 		public IntPtr cfTan;
 		public IntPtr cfTanh;
 		public IntPtr cfSqrt;
+		public IntPtr addCuboidCollider;
+		public IntPtr addSphereCollider;
+		public IntPtr addCapsuleCollider;
+		public IntPtr addMeshCollider;
+		public IntPtr addConvexMeshCollider;
 
         // Rust -> C# data
         public FunctionsToCallFromRust functionsToCallFromRust;
