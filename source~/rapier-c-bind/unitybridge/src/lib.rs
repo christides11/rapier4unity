@@ -51,18 +51,23 @@ impl log::Log for UnityLogger {
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            let log_type = match record.metadata().level() {
-                Level::Error => UnityLogType::Error,
-                Level::Warn => UnityLogType::Warning,
-                Level::Info => UnityLogType::Log,
-                Level::Debug => UnityLogType::Log,
-                Level::Trace => UnityLogType::Log,
-            };
-            
-            let message = CString::new(record.args().to_string()).unwrap();
-            let file = file!();
-            let line = line!();
             unsafe {
+                if UNITY_LOG_PTR.is_null() {
+                    return;
+                }
+                
+                let log_type = match record.metadata().level() {
+                    Level::Error => UnityLogType::Error,
+                    Level::Warn => UnityLogType::Warning,
+                    Level::Info => UnityLogType::Log,
+                    Level::Debug => UnityLogType::Log,
+                    Level::Trace => UnityLogType::Log,
+                };
+
+                let message = CString::new(record.args().to_string()).unwrap();
+                let file = file!();
+                let line = line!();
+
                 let log = (*UNITY_LOG_PTR).Log;
                 let val = CString::new(file).unwrap();
                 log(log_type, message.as_ptr(), val.as_ptr(), line as i32);

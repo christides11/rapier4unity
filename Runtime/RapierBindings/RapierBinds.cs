@@ -137,49 +137,49 @@ internal static unsafe class RapierBindings
 	public static extern unsafe bool CastRay(float fromX, float fromY, float fromZ, float dirX, float dirY, float dirZ, RapierRaycastHit* outHit);
 #endif
 #if UNITY_EDITOR && !DISABLE_DYNAMIC_RAPIER_LOAD
-	public static float Acos(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.acos)(x);
-	public static float Acosh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.acosh)(x);
-	public static float Asin(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.asin)(x);
-	public static float Asinh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.asinh)(x);
-	public static float Atan(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.atan)(x);
-	public static float Atanh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.atanh)(x);
-	public static float Cos(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cos)(x);
-	public static float Cosh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cosh)(x);
-	public static float Log(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.log)(x);
-	public static float Sin(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.sin)(x);
-	public static float Sinh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.sinh)(x);
-	public static float Tan(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.tan)(x);
-	public static float Tanh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.tanh)(x);
-	public static float Sqrt(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.sqrt)(x);
+	public static float CfAcos(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfAcos)(x);
+	public static float CfAcosh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfAcosh)(x);
+	public static float CfAsin(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfAsin)(x);
+	public static float CfAsinh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfAsinh)(x);
+	public static float CfAtan(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfAtan)(x);
+	public static float CfAtanh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfAtanh)(x);
+	public static float CfCos(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfCos)(x);
+	public static float CfCosh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfCosh)(x);
+	public static float CfLog(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfLog)(x);
+	public static float CfSin(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfSin)(x);
+	public static float CfSinh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfSinh)(x);
+	public static float CfTan(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfTan)(x);
+	public static float CfTanh(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfTanh)(x);
+	public static float CfSqrt(float x) => ((delegate* unmanaged[Cdecl]<float, float>) data.Data.cfSqrt)(x);
 #else
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="acos")]
-	public static extern unsafe float Acos(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="acosh")]
-	public static extern unsafe float Acosh(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="asin")]
-	public static extern unsafe float Asin(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="asinh")]
-	public static extern unsafe float Asinh(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="atan")]
-	public static extern unsafe float Atan(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="atanh")]
-	public static extern unsafe float Atanh(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cos")]
-	public static extern unsafe float Cos(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cosh")]
-	public static extern unsafe float Cosh(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="log")]
-	public static extern unsafe float Log(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="sin")]
-	public static extern unsafe float Sin(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="sinh")]
-	public static extern unsafe float Sinh(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="tan")]
-	public static extern unsafe float Tan(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="tanh")]
-	public static extern unsafe float Tanh(float x);
-	[DllImport(DllName, CallingConvention = Convention, EntryPoint="sqrt")]
-	public static extern unsafe float Sqrt(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_acos")]
+	public static extern unsafe float CfAcos(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_acosh")]
+	public static extern unsafe float CfAcosh(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_asin")]
+	public static extern unsafe float CfAsin(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_asinh")]
+	public static extern unsafe float CfAsinh(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_atan")]
+	public static extern unsafe float CfAtan(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_atanh")]
+	public static extern unsafe float CfAtanh(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_cos")]
+	public static extern unsafe float CfCos(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_cosh")]
+	public static extern unsafe float CfCosh(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_log")]
+	public static extern unsafe float CfLog(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_sin")]
+	public static extern unsafe float CfSin(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_sinh")]
+	public static extern unsafe float CfSinh(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_tan")]
+	public static extern unsafe float CfTan(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_tanh")]
+	public static extern unsafe float CfTanh(float x);
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="cf_sqrt")]
+	public static extern unsafe float CfSqrt(float x);
 #endif
 
 #if UNITY_EDITOR && !DISABLE_DYNAMIC_RAPIER_LOAD
@@ -236,20 +236,20 @@ internal static unsafe class RapierBindings
 			addTorque = NativeLoader.GetFunction(loaded_lib, "add_torque");
 			setIntegrationParameters = NativeLoader.GetFunction(loaded_lib, "set_integration_parameters");
 			castRay = NativeLoader.GetFunction(loaded_lib, "cast_ray");
-			acos = NativeLoader.GetFunction(loaded_lib, "acos");
-			acosh = NativeLoader.GetFunction(loaded_lib, "acosh");
-			asin = NativeLoader.GetFunction(loaded_lib, "asin");
-			asinh = NativeLoader.GetFunction(loaded_lib, "asinh");
-			atan = NativeLoader.GetFunction(loaded_lib, "atan");
-			atanh = NativeLoader.GetFunction(loaded_lib, "atanh");
-			cos = NativeLoader.GetFunction(loaded_lib, "cos");
-			cosh = NativeLoader.GetFunction(loaded_lib, "cosh");
-			log = NativeLoader.GetFunction(loaded_lib, "log");
-			sin = NativeLoader.GetFunction(loaded_lib, "sin");
-			sinh = NativeLoader.GetFunction(loaded_lib, "sinh");
-			tan = NativeLoader.GetFunction(loaded_lib, "tan");
-			tanh = NativeLoader.GetFunction(loaded_lib, "tanh");
-			sqrt = NativeLoader.GetFunction(loaded_lib, "sqrt");
+			cfAcos = NativeLoader.GetFunction(loaded_lib, "cf_acos");
+			cfAcosh = NativeLoader.GetFunction(loaded_lib, "cf_acosh");
+			cfAsin = NativeLoader.GetFunction(loaded_lib, "cf_asin");
+			cfAsinh = NativeLoader.GetFunction(loaded_lib, "cf_asinh");
+			cfAtan = NativeLoader.GetFunction(loaded_lib, "cf_atan");
+			cfAtanh = NativeLoader.GetFunction(loaded_lib, "cf_atanh");
+			cfCos = NativeLoader.GetFunction(loaded_lib, "cf_cos");
+			cfCosh = NativeLoader.GetFunction(loaded_lib, "cf_cosh");
+			cfLog = NativeLoader.GetFunction(loaded_lib, "cf_log");
+			cfSin = NativeLoader.GetFunction(loaded_lib, "cf_sin");
+			cfSinh = NativeLoader.GetFunction(loaded_lib, "cf_sinh");
+			cfTan = NativeLoader.GetFunction(loaded_lib, "cf_tan");
+			cfTanh = NativeLoader.GetFunction(loaded_lib, "cf_tanh");
+			cfSqrt = NativeLoader.GetFunction(loaded_lib, "cf_sqrt");
         }
 
         // Raw function pointers
@@ -287,20 +287,20 @@ internal static unsafe class RapierBindings
 		public IntPtr addTorque;
 		public IntPtr setIntegrationParameters;
 		public IntPtr castRay;
-		public IntPtr acos;
-		public IntPtr acosh;
-		public IntPtr asin;
-		public IntPtr asinh;
-		public IntPtr atan;
-		public IntPtr atanh;
-		public IntPtr cos;
-		public IntPtr cosh;
-		public IntPtr log;
-		public IntPtr sin;
-		public IntPtr sinh;
-		public IntPtr tan;
-		public IntPtr tanh;
-		public IntPtr sqrt;
+		public IntPtr cfAcos;
+		public IntPtr cfAcosh;
+		public IntPtr cfAsin;
+		public IntPtr cfAsinh;
+		public IntPtr cfAtan;
+		public IntPtr cfAtanh;
+		public IntPtr cfCos;
+		public IntPtr cfCosh;
+		public IntPtr cfLog;
+		public IntPtr cfSin;
+		public IntPtr cfSinh;
+		public IntPtr cfTan;
+		public IntPtr cfTanh;
+		public IntPtr cfSqrt;
 
         // Rust -> C# data
         public FunctionsToCallFromRust functionsToCallFromRust;
