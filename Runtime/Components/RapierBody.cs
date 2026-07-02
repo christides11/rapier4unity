@@ -11,6 +11,10 @@ namespace RapierPhysics
         public Collider[] colliders = Array.Empty<Collider>();
         public Rigidbody body;
 
+        [Header("Settings")] 
+        public float gravityScale = 1.0f;
+        
+        
         public RapierBody(bool autoRegister = true, bool autoDeregister = true)
         {
             this.autoRegister = autoRegister;

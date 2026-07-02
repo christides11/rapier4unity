@@ -47,6 +47,13 @@ extern "C" fn teardown() {
 }
 
 #[unsafe(no_mangle)]
+extern "C" fn reset_physics_world(funcs: *const FunctionsToCallFromRust) {
+    unsafe {
+        PHYSIC_SOLVER_DATA = Some(PhysicsWorld::default());
+    }
+}
+
+#[unsafe(no_mangle)]
 #[allow(static_mut_refs)]
 extern "C" fn solve() -> *const RawArray<SerializableCollisionEvent> {
     unsafe {
@@ -66,6 +73,8 @@ extern "C" fn solve() -> *const RawArray<SerializableCollisionEvent> {
     Box::into_raw(val)
 }
 
+/// Used on the Unity end to free the memory of the collision event array sent at the
+/// end of solve.
 #[unsafe(no_mangle)]
 extern "C" fn free_collision_events(ptr: *mut RawArray<SerializableCollisionEvent>) {
     unsafe {
