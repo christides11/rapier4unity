@@ -36,6 +36,7 @@ internal static unsafe class RapierBindings
 	public static void HelloWorld() => ((delegate* unmanaged[Cdecl]<void>) data.Data.helloWorld)();
 	public static void Version() => ((delegate* unmanaged[Cdecl]<void>) data.Data.version)();
 	public static void Teardown() => ((delegate* unmanaged[Cdecl]<void>) data.Data.teardown)();
+	public static void ResetPhysicsWorld(FunctionsToCallFromRust* funcs) => ((delegate* unmanaged[Cdecl]<FunctionsToCallFromRust*, void>) data.Data.resetPhysicsWorld)(funcs);
 	public static RawArray<CollisionEvent>* Solve() => ((delegate* unmanaged[Cdecl]<RawArray<CollisionEvent>*>) data.Data.solve)();
 	public static void FreeCollisionEvents(RawArray<CollisionEvent>* ptr) => ((delegate* unmanaged[Cdecl]<RawArray<CollisionEvent>*, void>) data.Data.freeCollisionEvents)(ptr);
 #else
@@ -47,6 +48,8 @@ internal static unsafe class RapierBindings
 	public static extern unsafe void Version();
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="teardown")]
 	public static extern unsafe void Teardown();
+	[DllImport(DllName, CallingConvention = Convention, EntryPoint="reset_physics_world")]
+	public static extern unsafe void ResetPhysicsWorld(FunctionsToCallFromRust* funcs);
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="solve")]
 	public static extern unsafe RawArray<CollisionEvent>* Solve();
 	[DllImport(DllName, CallingConvention = Convention, EntryPoint="free_collision_events")]
@@ -227,6 +230,7 @@ internal static unsafe class RapierBindings
 			helloWorld = NativeLoader.GetFunction(loaded_lib, "hello_world");
 			version = NativeLoader.GetFunction(loaded_lib, "version");
 			teardown = NativeLoader.GetFunction(loaded_lib, "teardown");
+			resetPhysicsWorld = NativeLoader.GetFunction(loaded_lib, "reset_physics_world");
 			solve = NativeLoader.GetFunction(loaded_lib, "solve");
 			freeCollisionEvents = NativeLoader.GetFunction(loaded_lib, "free_collision_events");
 			addCuboidCollider = NativeLoader.GetFunction(loaded_lib, "add_cuboid_collider");
@@ -280,6 +284,7 @@ internal static unsafe class RapierBindings
 		public IntPtr helloWorld;
 		public IntPtr version;
 		public IntPtr teardown;
+		public IntPtr resetPhysicsWorld;
 		public IntPtr solve;
 		public IntPtr freeCollisionEvents;
 		public IntPtr addCuboidCollider;
