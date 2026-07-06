@@ -20,7 +20,7 @@ namespace RapierPhysics
             internal uint m_FaceID;
             internal float m_Distance;
             internal Vector2 m_UV;
-            internal int m_Collider;
+            internal EntityId m_Collider;
         }
         
         public static bool Raycast(Ray ray, out RaycastHit hit)
@@ -38,7 +38,7 @@ namespace RapierPhysics
                 m_FaceID = rapierHit.m_FaceID,
                 m_Distance = rapierHit.m_Distance,
                 m_UV = rapierHit.m_UV,
-                m_Collider = RapierRuntimeData.handleToCollider[rapierHit.m_Collider].GetInstanceID()
+                m_Collider = RapierRuntimeData.handleToCollider[rapierHit.m_Collider].GetEntityId()
             };
             hit = UnsafeUtility.As<LocalRaycastHit, RaycastHit>(ref localHit);
             return true;
@@ -71,7 +71,7 @@ namespace RapierPhysics
                 m_FaceID = 0,
                 m_Distance = rapierHit.m_Distance,
                 m_UV = rapierHit.m_UV,
-                m_Collider = RapierRuntimeData.handleToCollider[rapierHit.m_Collider].GetInstanceID()
+                m_Collider = RapierRuntimeData.handleToCollider[rapierHit.m_Collider].GetEntityId()
             };
             shapecastHit = UnsafeUtility.As<LocalRaycastHit, RaycastHit>(ref localHit);
             return true;
